@@ -1,0 +1,12 @@
+scipy
+numpy
+pandas
+scikit-learn
+pymysql
+blosc
+zstd
+lz4
+catboost
+imbalanced-learn
+liac-arff
+pymfe
