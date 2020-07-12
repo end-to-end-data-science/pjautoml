@@ -1,7 +1,7 @@
 """Operations over a single CS."""
 from pjdata.content.specialdata import NoData
-from pjautoml.config.description.cs.configlist import ConfigList
-from pjautoml.config.description.parameter import FixedP
+from pjml.config.description.cs.configlist import ConfigList
+from pjml.config.description.parameter import FixedP
 from pjautoml.config.search.util import optimize
 
 

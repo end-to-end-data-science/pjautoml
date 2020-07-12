@@ -4,7 +4,7 @@ from math import ceil, floor
 
 from pjdata.aux.util import _
 from pjdata.content.specialdata import NoData
-from pjautoml.config.description.cs.configlist import ConfigList
+from pjml.config.description.cs.configlist import ConfigList
 
 
 def compare(x, y):

@@ -1,4 +1,4 @@
-from pjautoml.config.description.cs.abc.operatorcs import OperatorCS
+from pjml.config.description.cs.abc.operatorcs import OperatorCS
 
 
 class ShuffleCS(OperatorCS):
