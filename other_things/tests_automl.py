@@ -1,35 +1,31 @@
-"""Test"""
+"""Test."""
 
 import numpy as np
 
+import pjautoml.cs.operator.free.map as pja
 import pjdata.content.specialdata as sd
+from pjautoml.cs.operator.datadriven.optimization.modelfree.best import Best
+from pjautoml.cs.operator.datadriven.optimization.modelfree.random import RandomSearch
+from pjautoml.cs.operator.free.chain import Chain
+from pjautoml.cs.operator.free.sample import Sample
+from pjautoml.cs.operator.free.select import Select
 from pjdata.aux.util import _
-from pjml.config.description.cs.chaincs import ChainCS
-from pjautoml.config.search.many import select
-from pjautoml.config.search.single import sample, maximize, minimize
-from pjautoml.config.search.util import (
-    optimize,
-    run,
-    lrun,
-    sort,
-    cut, compare,
-)
-from pjml.pipeline import Pipeline
-from pjml.tool.abs.mixin.timing import withTiming
-from pjml.tool.chain import Chain
-from pjml.tool.data.communication.cache import Cache
-from pjml.tool.data.communication.report import Report
-from pjml.tool.data.evaluation.metric import Metric
-from pjml.tool.data.evaluation.split import Split, TrSplit, TsSplit
-from pjml.tool.data.flow.file import File
+from pjml.abs.mixin.timing import withTiming
+from pjml.data.communication.cache import Cache
+from pjml.data.communication.report import Report
+from pjml.data.evaluation.metric import Metric
+from pjml.data.evaluation.split import Split, TrSplit, TsSplit
+from pjml.data.flow.file import File
+from pjml.operator.pipeline import Pipeline
+from pjml.stream.expand.partition import Partition
+from pjml.stream.reduce.reduce import Reduce
+from pjml.stream.reduce.summ import Summ
+from pjml.stream.transform.map import Map
 from pjpy.modeling.supervised.classifier.dt import DT
 from pjpy.modeling.supervised.classifier.svmc import SVMC
 from pjpy.processing.feature.binarize import Binarize
 from pjpy.processing.feature.reductor.pca import PCA
-from pjml.tool.stream.expand.partition import Partition
-from pjml.tool.stream.reduce.reduce import Reduce
-from pjml.tool.stream.reduce.summ import Summ
-from pjml.tool.stream.transform.map import Map
+from pjpy.processing.feature.scaler.minmax import MinMax
 
 
 def printable_test():
@@ -45,7 +41,7 @@ def printable_test():
 
 
 def test_tsvmc(arq="iris.arff"):
-    cs = File(arq).cs
+    cs = File(arq)
     pipe = Pipeline(File(arq), SVMC())
     train, test = pipe.dual_transform()
     print("Train..............\n", train)
@@ -67,7 +63,6 @@ def test_metric(arq="iris.arff"):
 
 
 def test_pca(arq="iris.arff"):
-    cs = File(arq).cs
     pipe = Pipeline(File(arq), Split(), PCA(), SVMC(), Metric())
     train, test = pipe.dual_transform()
     print("Train..............\n", _.m(_.name, train.history))
@@ -197,7 +192,7 @@ def test_check_architecture2(arq="iris.arff"):
 
 
 def printing_test(arq="iris.arff"):
-    print(Chain(Map(select(File(arq)))))
+    print(Chain(pja.Map(File(arq))))
     exp = Pipeline(
         File(arq),
         Partition(),
@@ -208,15 +203,15 @@ def printing_test(arq="iris.arff"):
         Report("mean ... S: $S", enhance=False),
     )
     print(exp)
-    print(select(DT(), SVMC()))
+    print(Select(DT(), SVMC()))
 
-    sel = select(DT(), SVMC())
+    sel = Select(DT(), SVMC())
     print(sel)
     print(Map(DT()))
-    exp = ChainCS(
+    exp = Chain(
         File(arq),
         Partition(),
-        Map(PCA(), select(SVMC(), DT(criterion="gini")), Metric(enhance=False)),
+        pja.Map(PCA(), Select(SVMC(), DT(criterion="gini")), Metric(enhance=False)),
         Report("teste"),
         Map(Report("<---------------------- fold")),
     )
@@ -225,29 +220,81 @@ def printing_test(arq="iris.arff"):
 
 def random_search(arq="iris.arff"):
     np.random.seed(0)
-    exp = Pipeline(
+    exp = Chain(
         File(arq),
         Partition(),
-        Map(PCA(), select(SVMC(), DT(criterion="gini")), Metric()),
+        pja.Map(PCA(), Select(SVMC(), DT(criterion="gini")), Metric()),
         # Map(Report("<---------------------- fold"), enhance=False),
         Summ(function="mean"),
         Reduce(),
         Report("Mean S: $S"),
     )
 
-    expr = sample(exp, n=10)
-    result = optimize(expr, n=5)
-    result.disable_pretty_printing()
-    print(result)
+    # Manual
+    a = Sample(exp, n=10)
+    result = Best(a, n=5)
+    print(len(result.datas))
+    print(len(result.components))
+
+    # using Random Search
+    rs1 = RandomSearch(exp, sample=20, best=5)
+    print(len(rs1.datas))
+    print(len(rs1.components))
+
+    rs2 = RandomSearch(rs1, sample=5, best=1)
+    print(len(rs2.datas))
+    print(len(rs2.components))
+    print(rs2.datas[0])
+    print(rs2.components[0])
+
+    # Precisamos extrair o pipeline para que ele seja útil para o usuário usar em outras atividade :/
+    # Por exemplo, prever outros novos exemplos
+
+
+def automl_op(arq="iris.arff"):
+    np.random.seed(0)
+    # AutoML Level
+    # Expression --> A * B
+    # Workflow --> exp1 * exp2 * ... * expn
+    workflow = File(arq) * Partition() * \
+               pja.Map(PCA @ MinMax * (SVMC + DT + DT(criterion="gini")) * Metric()) * \
+               Summ(function="mean") * \
+               Reduce() * Report("Mean S: $S")
+
+    # using Random Search
+    rs1 = RandomSearch(workflow, sample=20)
+    print(len(rs1.datas))
+    print(len(rs1.components))
+
+    res_train, res_test = rs1.datas[0]
+    print("Train result: ", res_train)
+    print("test result: ", res_test)
+
+
+def ml_op(arq="iris.arff"):
+    np.random.seed(0)
+    # ML level --> Pipelines
+    pipe = \
+        File(arq) * Partition() * \
+        Map(PCA() @ MinMax() * (SVMC() + DT(criterion="gini")) * Metric()) * \
+        Summ(function="mean") * \
+        Reduce() * Report("Mean S: $S")
+
+    print(type(pipe))
+    print(pipe)
+
+    res_train, res_test = pipe.dual_transform()
+    print("Train result: ", res_train)
+    print("test result: ", res_test)
 
 
 def ger_workflow(seed=0, arq="iris.arff"):
     np.random.seed(seed)
 
-    workflow = Pipeline(
+    workflow = Chain(
         File(arq),
         Partition(),
-        Map(PCA(), select(SVMC(), DT(criterion="gini")), Metric(enhance=False)),
+        pja.Map(PCA(), Select(SVMC(), DT(criterion="gini")), Metric(enhance=False)),
         Summ(function="mean", enhance=False),
         Reduce(),
         Report("Mean S: $S", enhance=False),
@@ -257,69 +304,10 @@ def ger_workflow(seed=0, arq="iris.arff"):
     return workflow
 
 
-def util():
-    # set state for all seed in pjml
-    # we should study if it is necessary a global seed handler to make available multiprocessing.
-
-    def clist():
-        np.random.seed(0)
-        return sample(ger_workflow(), n=10)
-
-    # run all the experiment
-    print("run all the experiment")
-    res1 = run(clist())
-    print("----------------------------")
-
-    # run all experiment lazily
-    print("run all experiment lazily")
-    res2 = lrun(clist())
-    print("----------------------------")
-
-    # compare the experiments
-    print("compare the two experiment")
-    print(compare(res1, res2))
-    print("----------------------------")
-
-    # minimize
-    print("take the minimun")
-    result = minimize(clist(), n=3)
-    result.disable_pretty_printing()
-    print(result)
-    print("----------------------------")
-
-    # maximize
-    print("take the maximum")
-    result = maximize(clist(), n=3)
-    result.disable_pretty_printing()
-    print(result)
-    print("----------------------------")
-
-    # take the top n
-    print("take the top three")
-    res1 = optimize(clist(), n=3)
-    res1.disable_pretty_printing()
-    print(res1)
-    print("----------------------------")
-
-    # sort
-    print("sort experiment result")
-    res2 = sort(clist())
-    res2.disable_pretty_printing()
-    print(result)
-    print("----------------------------")
-
-    # take the best first quartile
-    print("take the best first quartile")
-    result = cut(sort(clist()))
-    result.disable_pretty_printing()
-    print(result)
-    print("----------------------------")
-
-
 def default_config():
     print("SVMC: ", SVMC())
 
-    clist = sample(SVMC, n=3)
+    clist = Sample(SVMC, n=3)
     print(clist)
 
 
@@ -328,7 +316,7 @@ def avg_cost_of_a_single_sample():
     elapsed_times = []
     for i in range(10):
         start_time = withTiming._clock()
-        pipes = sample(ger_workflow(i), n=50)
+        pipes = Sample(ger_workflow(i), n=100)
         delta = round((withTiming._clock() - start_time) * 200) / 10
         elapsed_times.append(delta)
         if i % 3 == 0:
@@ -362,15 +350,15 @@ def main():
     test_partition()
     test_split_train_test()
     test_with_summ_reduce()
-    # test_cache()
     printing_test()
     random_search()
-    util()
+    automl_op()
+    ml_op()
     default_config()
     avg_cost_of_a_single_sample()
-
     test_sequence_of_classifiers()
 
+    # test_cache()
     # sanity test
     # test_check_architecture()
 
