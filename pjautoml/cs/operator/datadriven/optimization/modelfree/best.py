@@ -12,8 +12,9 @@ from pjdata.content.specialdata import NoData
 class Best(CList):
     def __init__(self, listcs, n=1, train=NoData, test=NoData, better="higher"):
         if not isinstance(listcs, ListCS):
-            raise Exception("Exhaustive search is only possible on finite"
-                            "configuration space (FCS)!")
+            raise Exception(
+                "Exhaustive search is only possible on finite" "configuration space (FCS)!"
+            )
         select = None
         if better == "higher":
             select = nlargest

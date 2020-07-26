@@ -13,12 +13,12 @@ class Component(c.Component, AsOperandCS):
     """
 
     def __init__(
-            self,
-            config: dict,
-            enhance: bool = True,
-            model: bool = True,
-            deterministic: bool = False,
-            nodata_handler: bool = False,
+        self,
+        config: dict,
+        enhance: bool = True,
+        model: bool = True,
+        deterministic: bool = False,
+        nodata_handler: bool = False,
     ):
         super().__init__(config, enhance, model, deterministic, nodata_handler)
 
@@ -36,4 +36,3 @@ class Component(c.Component, AsOperandCS):
         cs_ = cls._cs_impl()
         # TODO: Why do we send the 'cls' to the CS contructor avoiding to call 'identified' ?
         return cs_.identified(name=cls.__name__, path=cls.__module__)
-

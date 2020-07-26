@@ -20,8 +20,7 @@ class Graph(CS):
         for nd in self.nodes:
             if not isinstance(nd, Node):
                 raise Exception(
-                    f"List of nodes must have only 'Node' "
-                    f"objects and not '{type(nd)}' !"
+                    f"List of nodes must have only 'Node' " f"objects and not '{type(nd)}' !"
                 )
 
     def _sample_cfg(self):

@@ -9,5 +9,5 @@ class CSS(CS):
         # CS by this for.
         css = [cs.cs for cs in css]
 
-        super().__init__({'css': css})
+        super().__init__({"css": css})
         self.css = css

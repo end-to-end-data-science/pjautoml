@@ -19,7 +19,7 @@ class ListCS(CSS):
         self.current_index += 1
         if self.current_index >= self.size:
             self.current_index = -1
-            raise StopIteration('No more objects.')
+            raise StopIteration("No more objects.")
         return self.css[self.current_index]
 
     def __len__(self):

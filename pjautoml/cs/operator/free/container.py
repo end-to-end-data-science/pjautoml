@@ -10,10 +10,10 @@ class Container(NAry):
         self.name = name
         self.path = path
 
-        self.kwargs['seed'] = seed
+        self.kwargs["seed"] = seed
 
     def sample(self):
         """TODO."""
-        config = {'components': [c.sample() for c in self.css]}
+        config = {"components": [c.sample() for c in self.css]}
         config.update(self.kwargs)
         return materialize(self.name, self.path, config)

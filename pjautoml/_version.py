@@ -21,4 +21,4 @@ pjautoml is a ...
 # 'X.Y.dev0' is the canonical version of 'X.Y.dev'
 
 
-__version__ = '0.0a3'
+__version__ = "0.0a3"
