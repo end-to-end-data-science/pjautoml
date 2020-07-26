@@ -5,3 +5,4 @@ seaborn
 sphinx-gallery
 numpydoc
 liac-arff
+pjpy
