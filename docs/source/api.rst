@@ -128,6 +128,6 @@ Configuration space operators
 .. autosummary::
    :toctree: generated/
 
-   component.Component
    mixin.asoperand.AsOperandCS
+..   component.Component
 
