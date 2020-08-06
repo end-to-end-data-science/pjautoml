@@ -17,6 +17,22 @@ sys.path.insert(0, os.path.abspath('../sphinxext'))
 from github_link import make_linkcode_resolve
 import sphinx_gallery
 
+# Add any Sphinx extension module names here, as strings. They can be
+# extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
+# ones.
+extensions = [
+    'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
+    'sphinx.ext.linkcode',
+    'sphinx.ext.intersphinx',
+    'sphinx_gallery.gen_gallery',
+    'numpydoc',
+]
+
+# see: https://github.com/phn/pytpm/issues/3#issuecomment-12133978
+# see https://github.com/numpy/numpydoc/issues/69
+numpydoc_show_class_members = False
+
 
 # -- Project information -----------------------------------------------------
 # General information about the project.
@@ -35,22 +51,6 @@ version = release = __version__
 # The master toctree document.
 master_doc = 'index'
 
-# Add any Sphinx extension module names here, as strings. They can be
-# extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
-# ones.
-extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.autosummary',
-    'sphinx.ext.linkcode',
-    'sphinx.ext.intersphinx',
-    'sphinx_gallery.gen_gallery',
-    'numpydoc',
-]
-
-# see: https://github.com/phn/pytpm/issues/3#issuecomment-12133978
-# see https://github.com/numpy/numpydoc/issues/69
-numpydoc_show_class_members = False
-
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -64,8 +64,8 @@ add_function_parentheses = False
 exclude_patterns = ['_build', '_templates']
 # exclude_patterns = []
 
-autodoc_default_options = {'members': True, 'inherited-members': True}
-# autodoc_default_flags = ['members', 'inherited-members']
+# autodoc_default_options = {'members': True, 'inherited-members': True}
+autodoc_default_flags = ['members', 'inherited-members']
 
 # generate autosummary even if no references
 autosummary_generate = True
